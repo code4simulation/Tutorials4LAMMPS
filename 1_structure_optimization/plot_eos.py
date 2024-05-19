@@ -36,7 +36,7 @@ E_fit = birch_murnaghan(V_fit, *params_opt)
 
 plt.plot(volumes, energies, 'o', label='Data')
 plt.plot(V_fit, E_fit, '-', label='Fit')
-plt.xlabel('Volume (Å^3)')
+plt.xlabel(r'Volume (Å$^3$)')
 plt.ylabel('Energy (eV)')
 plt.legend()
 plt.show()
