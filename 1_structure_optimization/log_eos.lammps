@@ -1,0 +1,974 @@
+LAMMPS (29 Sep 2021 - Update 2)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+# LAMMPS input script for Argon with Lennard-Jones potential
+units       metal
+atom_style  atomic
+
+read_data   Ar_FCC_relaxed.lammps
+Reading data file ...
+  orthogonal box = (0.0000000 0.0000000 0.0000000) to (5.2523000 5.2523000 5.2523000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  4 atoms
+  read_data CPU = 0.001 seconds
+
+mass 1 39.9480
+
+# Define the Lennard-Jones potential
+pair_style      lj/cut 20
+pair_coeff      1 1 0.010325947230266126 3.405 20
+
+# Define thermodynamic output
+thermo          10
+thermo_style    custom step temp pe etotal press vol
+
+#
+variable vmin equal 0.97
+variable vmax equal 1.03
+variable vstep equal 0.005
+variable vloop equal (${vmax}-${vmin})/${vstep}+1
+variable vloop equal (1.03-${vmin})/${vstep}+1
+variable vloop equal (1.03-0.97)/${vstep}+1
+variable vloop equal (1.03-0.97)/0.005+1
+
+variable i loop ${vloop}
+variable i loop 13
+label loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal ${vmin}+(${i}-1)*${vstep}
+variable scale equal 0.97+(${i}-1)*${vstep}
+variable scale equal 0.97+(1-1)*${vstep}
+variable scale equal 0.97+(1-1)*0.005
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(1-1)*${vstep}
+variable ratio equal 0.97+(1-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 0.97 y scale ${scale} z scale ${scale} remap
+change_box all x scale 0.97 y scale 0.97 z scale ${scale} remap
+change_box all x scale 0.97 y scale 0.97 z scale 0.97 remap
+Changing box ...
+  orthogonal box = (0.078784500 0.0000000 0.0000000) to (5.1735155 5.2523000 5.2523000)
+  orthogonal box = (0.078784500 0.078784500 0.0000000) to (5.1735155 5.1735155 5.2523000)
+  orthogonal box = (0.078784500 0.078784500 0.078784500) to (5.1735155 5.1735155 5.1735155)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Neighbor list info ...
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 22
+  ghost atom cutoff = 22
+  binsize = 11, bins = 1 1 1
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut, perpetual
+      attributes: half, newton on
+      pair build: half/bin/atomonly/newton
+      stencil: half/bin/3d
+      bin: standard
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       0            0  -0.33970742  -0.33970742    4112.4194    132.24028 
+       1            0  -0.33970742  -0.33970742    4112.4194    132.24028 
+Loop time of 0.000279432 on 1 procs for 1 steps with 4 atoms
+
+97.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.339707422262182 -0.339707422262182 -0.339707422262182
+  Force two-norm initial, final = 9.6987482e-16 9.6987482e-16
+  Force max component initial, final = 3.4455945e-16 3.4455945e-16
+  Final line search alpha, max atom move = 1.0000000 3.4455945e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00021732 | 0.00021732 | 0.00021732 |   0.0 | 77.77
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.471e-05  | 4.471e-05  | 4.471e-05  |   0.0 | 16.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.74e-05   |            |       |  6.23
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2816.00 ave        2816 max        2816 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2816
+Ave neighs/atom = 704.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.97 -0.339707422262182 132.240284547843
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(2-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(2-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(2-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(2-1)*0.005)/(0.97+(2-2)*${vstep})
+variable scale equal (0.97+(2-1)*0.005)/(0.97+(2-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(2-1)*${vstep}
+variable ratio equal 0.97+(2-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00515463917526 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00515463917526 y scale 1.00515463917526 z scale ${scale} remap
+change_box all x scale 1.00515463917526 y scale 1.00515463917526 z scale 1.00515463917526 remap
+Changing box ...
+  orthogonal box = (0.065653750 0.078784500 0.078784500) to (5.1866463 5.1735155 5.1735155)
+  orthogonal box = (0.065653750 0.065653750 0.078784500) to (5.1866463 5.1866463 5.1735155)
+  orthogonal box = (0.065653750 0.065653750 0.065653750) to (5.1866463 5.1866463 5.1866463)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       1            0  -0.34439285  -0.34439285     3210.418     134.2958 
+       2            0  -0.34439285  -0.34439285     3210.418     134.2958 
+Loop time of 0.000603448 on 1 procs for 1 steps with 4 atoms
+
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.344392847019499 -0.344392847019499 -0.344392847019499
+  Force two-norm initial, final = 9.6061136e-16 9.6061136e-16
+  Force max component initial, final = 3.1463547e-16 3.1463547e-16
+  Final line search alpha, max atom move = 1.0000000 3.1463547e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00052246 | 0.00052246 | 0.00052246 |   0.0 | 86.58
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 5.4882e-05 | 5.4882e-05 | 5.4882e-05 |   0.0 |  9.09
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 2.61e-05   |            |       |  4.33
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2576.00 ave        2576 max        2576 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2576
+Ave neighs/atom = 644.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.975 -0.344392847019499 134.295796507442
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(3-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(3-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(3-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(3-1)*0.005)/(0.97+(3-2)*${vstep})
+variable scale equal (0.97+(3-1)*0.005)/(0.97+(3-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(3-1)*${vstep}
+variable ratio equal 0.97+(3-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00512820512821 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00512820512821 y scale 1.00512820512821 z scale ${scale} remap
+change_box all x scale 1.00512820512821 y scale 1.00512820512821 z scale 1.00512820512821 remap
+Changing box ...
+  orthogonal box = (0.052523000 0.065653750 0.065653750) to (5.1997770 5.1866463 5.1866463)
+  orthogonal box = (0.052523000 0.052523000 0.065653750) to (5.1997770 5.1997770 5.1866463)
+  orthogonal box = (0.052523000 0.052523000 0.052523000) to (5.1997770 5.1997770 5.1997770)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       2            0  -0.34802202  -0.34802202    2406.2585     136.3725 
+       3            0  -0.34802202  -0.34802202    2406.2585     136.3725 
+Loop time of 0.000285614 on 1 procs for 1 steps with 4 atoms
+
+100.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.348022021415435 -0.348022021415435 -0.348022021415435
+  Force two-norm initial, final = 8.4990520e-16 8.4990520e-16
+  Force max component initial, final = 2.9793876e-16 2.9793876e-16
+  Final line search alpha, max atom move = 1.0000000 2.9793876e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00021991 | 0.00021991 | 0.00021991 |   0.0 | 76.99
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.8874e-05 | 4.8874e-05 | 4.8874e-05 |   0.0 | 17.11
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.683e-05  |            |       |  5.89
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2576.00 ave        2576 max        2576 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2576
+Ave neighs/atom = 644.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.98 -0.348022021415435 136.372499125269
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(4-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(4-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(4-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(4-1)*0.005)/(0.97+(4-2)*${vstep})
+variable scale equal (0.97+(4-1)*0.005)/(0.97+(4-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(4-1)*${vstep}
+variable ratio equal 0.97+(4-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00510204081633 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00510204081633 y scale 1.00510204081633 z scale ${scale} remap
+change_box all x scale 1.00510204081633 y scale 1.00510204081633 z scale 1.00510204081633 remap
+Changing box ...
+  orthogonal box = (0.039392250 0.052523000 0.052523000) to (5.2129078 5.1997770 5.1997770)
+  orthogonal box = (0.039392250 0.039392250 0.052523000) to (5.2129078 5.2129078 5.1997770)
+  orthogonal box = (0.039392250 0.039392250 0.039392250) to (5.2129078 5.2129078 5.2129078)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       3            0  -0.35069434  -0.35069434    1690.4627     138.4705 
+       4            0  -0.35069434  -0.35069434    1690.4627     138.4705 
+Loop time of 0.000236725 on 1 procs for 1 steps with 4 atoms
+
+100.1% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.350694335709121 -0.350694335709121 -0.350694335709121
+  Force two-norm initial, final = 8.1817739e-16 8.1817739e-16
+  Force max component initial, final = 2.5326963e-16 2.5326963e-16
+  Final line search alpha, max atom move = 1.0000000 2.5326963e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00017832 | 0.00017832 | 0.00017832 |   0.0 | 75.33
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.4045e-05 | 4.4045e-05 | 4.4045e-05 |   0.0 | 18.61
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.436e-05  |            |       |  6.07
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2576.00 ave        2576 max        2576 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2576
+Ave neighs/atom = 644.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.985 -0.350694335709121 138.470501071363
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(5-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(5-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(5-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(5-1)*0.005)/(0.97+(5-2)*${vstep})
+variable scale equal (0.97+(5-1)*0.005)/(0.97+(5-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(5-1)*${vstep}
+variable ratio equal 0.97+(5-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00507614213198 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00507614213198 y scale 1.00507614213198 z scale ${scale} remap
+change_box all x scale 1.00507614213198 y scale 1.00507614213198 z scale 1.00507614213198 remap
+Changing box ...
+  orthogonal box = (0.026261500 0.039392250 0.039392250) to (5.2260385 5.2129078 5.2129078)
+  orthogonal box = (0.026261500 0.026261500 0.039392250) to (5.2260385 5.2260385 5.2129078)
+  orthogonal box = (0.026261500 0.026261500 0.026261500) to (5.2260385 5.2260385 5.2260385)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       4            0  -0.35250081  -0.35250081    1054.4563    140.58991 
+       5            0  -0.35250081  -0.35250081    1054.4563    140.58991 
+Loop time of 0.000242517 on 1 procs for 1 steps with 4 atoms
+
+100.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+      -0.3525008064667   -0.3525008064667   -0.3525008064667
+  Force two-norm initial, final = 5.0220714e-16 5.0220714e-16
+  Force max component initial, final = 1.7087026e-16 1.7087026e-16
+  Final line search alpha, max atom move = 1.0000000 1.7087026e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00018612 | 0.00018612 | 0.00018612 |   0.0 | 76.74
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.3909e-05 | 4.3909e-05 | 4.3909e-05 |   0.0 | 18.11
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.249e-05  |            |       |  5.15
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2504.00 ave        2504 max        2504 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2504
+Ave neighs/atom = 626.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.99 -0.3525008064667 140.589911015766
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(6-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(6-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(6-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(6-1)*0.005)/(0.97+(6-2)*${vstep})
+variable scale equal (0.97+(6-1)*0.005)/(0.97+(6-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(6-1)*${vstep}
+variable ratio equal 0.97+(6-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.0050505050505 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.0050505050505 y scale 1.0050505050505 z scale ${scale} remap
+change_box all x scale 1.0050505050505 y scale 1.0050505050505 z scale 1.0050505050505 remap
+Changing box ...
+  orthogonal box = (0.013130750 0.026261500 0.026261500) to (5.2391693 5.2260385 5.2260385)
+  orthogonal box = (0.013130750 0.013130750 0.026261500) to (5.2391693 5.2391693 5.2260385)
+  orthogonal box = (0.013130750 0.013130750 0.013130750) to (5.2391693 5.2391693 5.2391693)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       5            0  -0.35352478  -0.35352478    490.48142    142.73084 
+       6            0  -0.35352478  -0.35352478    490.48142    142.73084 
+Loop time of 0.000283172 on 1 procs for 1 steps with 4 atoms
+
+100.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.353524778255282 -0.353524778255282 -0.353524778255282
+  Force two-norm initial, final = 4.8807018e-16 4.8807018e-16
+  Force max component initial, final = 2.2345407e-16 2.2345407e-16
+  Final line search alpha, max atom move = 1.0000000 2.2345407e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.0002123  | 0.0002123  | 0.0002123  |   0.0 | 74.97
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 5.3802e-05 | 5.3802e-05 | 5.3802e-05 |   0.0 | 19.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.707e-05  |            |       |  6.03
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2504.00 ave        2504 max        2504 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2504
+Ave neighs/atom = 626.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+0.995 -0.353524778255282 142.730837628519
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(7-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(7-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(7-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(7-1)*0.005)/(0.97+(7-2)*${vstep})
+variable scale equal (0.97+(7-1)*0.005)/(0.97+(7-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(7-1)*${vstep}
+variable ratio equal 0.97+(7-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00502512562814 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00502512562814 y scale 1.00502512562814 z scale ${scale} remap
+change_box all x scale 1.00502512562814 y scale 1.00502512562814 z scale 1.00502512562814 remap
+Changing box ...
+  orthogonal box = (-1.3322676e-14 0.013130750 0.013130750) to (5.2523000 5.2391693 5.2391693)
+  orthogonal box = (-1.3322676e-14 -1.3322676e-14 0.013130750) to (5.2523000 5.2523000 5.2391693)
+  orthogonal box = (-1.3322676e-14 -1.3322676e-14 -1.3322676e-14) to (5.2523000 5.2523000 5.2523000)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       6            0  -0.35379429  -0.35379429   -7.4146789    144.89339 
+       7            0  -0.35379429  -0.35379429   -7.4146789    144.89339 
+Loop time of 0.000281908 on 1 procs for 1 steps with 4 atoms
+
+100.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.353794290028083 -0.353794290028083 -0.353794290028083
+  Force two-norm initial, final = 5.8900574e-16 5.8900574e-16
+  Force max component initial, final = 1.9775848e-16 1.9775848e-16
+  Final line search alpha, max atom move = 1.0000000 1.9775848e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.0002211  | 0.0002211  | 0.0002211  |   0.0 | 78.43
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.4535e-05 | 4.4535e-05 | 4.4535e-05 |   0.0 | 15.80
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.627e-05  |            |       |  5.77
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2504.00 ave        2504 max        2504 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2504
+Ave neighs/atom = 626.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1 -0.353794290028083 144.893389579669
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(8-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(8-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(8-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(8-1)*0.005)/(0.97+(8-2)*${vstep})
+variable scale equal (0.97+(8-1)*0.005)/(0.97+(8-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(8-1)*${vstep}
+variable ratio equal 0.97+(8-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.005 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.005 y scale 1.005 z scale ${scale} remap
+change_box all x scale 1.005 y scale 1.005 z scale 1.005 remap
+Changing box ...
+  orthogonal box = (-0.013130750 -1.3322676e-14 -1.3322676e-14) to (5.2654308 5.2523000 5.2523000)
+  orthogonal box = (-0.013130750 -0.013130750 -1.3322676e-14) to (5.2654308 5.2654308 5.2523000)
+  orthogonal box = (-0.013130750 -0.013130750 -0.013130750) to (5.2654308 5.2654308 5.2654308)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       7            0  -0.35347718  -0.35347718   -447.76793    147.07768 
+       8            0  -0.35347718  -0.35347718   -447.76793    147.07768 
+Loop time of 0.000233275 on 1 procs for 1 steps with 4 atoms
+
+99.9% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.353477184666077 -0.353477184666077 -0.353477184666077
+  Force two-norm initial, final = 6.7599136e-16 6.7599136e-16
+  Force max component initial, final = 2.2854982e-16 2.2854982e-16
+  Final line search alpha, max atom move = 1.0000000 2.2854982e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00017651 | 0.00017651 | 0.00017651 |   0.0 | 75.67
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.3809e-05 | 4.3809e-05 | 4.3809e-05 |   0.0 | 18.78
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.295e-05  |            |       |  5.55
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2408.00 ave        2408 max        2408 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2408
+Ave neighs/atom = 602.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.005 -0.353477184666077 147.077675539256
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(9-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(9-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(9-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(9-1)*0.005)/(0.97+(9-2)*${vstep})
+variable scale equal (0.97+(9-1)*0.005)/(0.97+(9-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(9-1)*${vstep}
+variable ratio equal 0.97+(9-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00497512437811 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00497512437811 y scale 1.00497512437811 z scale ${scale} remap
+change_box all x scale 1.00497512437811 y scale 1.00497512437811 z scale 1.00497512437811 remap
+Changing box ...
+  orthogonal box = (-0.026261500 -0.013130750 -0.013130750) to (5.2785615 5.2654308 5.2654308)
+  orthogonal box = (-0.026261500 -0.026261500 -0.013130750) to (5.2785615 5.2785615 5.2654308)
+  orthogonal box = (-0.026261500 -0.026261500 -0.026261500) to (5.2785615 5.2785615 5.2785615)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       8            0  -0.35258768  -0.35258768   -835.21298     149.2838 
+       9            0  -0.35258768  -0.35258768   -835.21298     149.2838 
+Loop time of 0.000246493 on 1 procs for 1 steps with 4 atoms
+
+100.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.352587677121648 -0.352587677121648 -0.352587677121648
+  Force two-norm initial, final = 5.6302127e-16 5.6302127e-16
+  Force max component initial, final = 1.7845968e-16 1.7845968e-16
+  Final line search alpha, max atom move = 1.0000000 1.7845968e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00018883 | 0.00018883 | 0.00018883 |   0.0 | 76.60
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.4062e-05 | 4.4062e-05 | 4.4062e-05 |   0.0 | 17.88
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.361e-05  |            |       |  5.52
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2408.00 ave        2408 max        2408 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2408
+Ave neighs/atom = 602.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.01 -0.352587677121648 149.283804177323
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(10-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(10-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(10-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(10-1)*0.005)/(0.97+(10-2)*${vstep})
+variable scale equal (0.97+(10-1)*0.005)/(0.97+(10-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(10-1)*${vstep}
+variable ratio equal 0.97+(10-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.0049504950495 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.0049504950495 y scale 1.0049504950495 z scale ${scale} remap
+change_box all x scale 1.0049504950495 y scale 1.0049504950495 z scale 1.0049504950495 remap
+Changing box ...
+  orthogonal box = (-0.039392250 -0.026261500 -0.026261500) to (5.2916923 5.2785615 5.2785615)
+  orthogonal box = (-0.039392250 -0.039392250 -0.026261500) to (5.2916923 5.2916923 5.2785615)
+  orthogonal box = (-0.039392250 -0.039392250 -0.039392250) to (5.2916923 5.2916923 5.2916923)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+       9            0  -0.35118431  -0.35118431   -1174.9565    151.51188 
+      10            0  -0.35118431  -0.35118431   -1174.9565    151.51188 
+Loop time of 0.00025334 on 1 procs for 1 steps with 4 atoms
+
+100.3% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.351184313982842 -0.351184313982842 -0.351184313982842
+  Force two-norm initial, final = 3.6450626e-16 3.6450626e-16
+  Force max component initial, final = 1.4137996e-16 1.4137996e-16
+  Final line search alpha, max atom move = 1.0000000 1.4137996e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00019703 | 0.00019703 | 0.00019703 |   0.0 | 77.77
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.3841e-05 | 4.3841e-05 | 4.3841e-05 |   0.0 | 17.31
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.246e-05  |            |       |  4.92
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2408.00 ave        2408 max        2408 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2408
+Ave neighs/atom = 602.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.015 -0.351184313982842 151.511884163909
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(11-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(11-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(11-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(11-1)*0.005)/(0.97+(11-2)*${vstep})
+variable scale equal (0.97+(11-1)*0.005)/(0.97+(11-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(11-1)*${vstep}
+variable ratio equal 0.97+(11-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00492610837438 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00492610837438 y scale 1.00492610837438 z scale ${scale} remap
+change_box all x scale 1.00492610837438 y scale 1.00492610837438 z scale 1.00492610837438 remap
+Changing box ...
+  orthogonal box = (-0.052523000 -0.039392250 -0.039392250) to (5.3048230 5.2916923 5.2916923)
+  orthogonal box = (-0.052523000 -0.052523000 -0.039392250) to (5.3048230 5.3048230 5.2916923)
+  orthogonal box = (-0.052523000 -0.052523000 -0.052523000) to (5.3048230 5.3048230 5.3048230)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+      10            0  -0.34922542  -0.34922542   -1469.7276    153.76202 
+      11            0  -0.34922542  -0.34922542   -1469.7276    153.76202 
+Loop time of 0.000264499 on 1 procs for 1 steps with 4 atoms
+
+99.8% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.349225422352147 -0.349225422352147 -0.349225422352147
+  Force two-norm initial, final = 5.4487099e-16 5.4487099e-16
+  Force max component initial, final = 1.6176296e-16 1.6176296e-16
+  Final line search alpha, max atom move = 1.0000000 1.6176296e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00020254 | 0.00020254 | 0.00020254 |   0.0 | 76.58
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.9319e-05 | 4.9319e-05 | 4.9319e-05 |   0.0 | 18.65
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.264e-05  |            |       |  4.78
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2312.00 ave        2312 max        2312 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2312
+Ave neighs/atom = 578.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.02 -0.349225422352147 153.762024169058
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(12-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(12-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(12-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(12-1)*0.005)/(0.97+(12-2)*${vstep})
+variable scale equal (0.97+(12-1)*0.005)/(0.97+(12-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(12-1)*${vstep}
+variable ratio equal 0.97+(12-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00490196078431 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00490196078431 y scale 1.00490196078431 z scale ${scale} remap
+change_box all x scale 1.00490196078431 y scale 1.00490196078431 z scale 1.00490196078431 remap
+Changing box ...
+  orthogonal box = (-0.065653750 -0.052523000 -0.052523000) to (5.3179537 5.3048230 5.3048230)
+  orthogonal box = (-0.065653750 -0.065653750 -0.052523000) to (5.3179537 5.3179537 5.3048230)
+  orthogonal box = (-0.065653750 -0.065653750 -0.065653750) to (5.3179537 5.3179537 5.3179537)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+      11            0  -0.34695328  -0.34695328   -1727.8496    156.03433 
+      12            0  -0.34695328  -0.34695328   -1727.8496    156.03433 
+Loop time of 0.000249397 on 1 procs for 1 steps with 4 atoms
+
+100.2% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.346953280357922 -0.346953280357922 -0.346953280357922
+  Force two-norm initial, final = 3.1466912e-16 3.1466912e-16
+  Force max component initial, final = 9.5409791e-17 9.5409791e-17
+  Final line search alpha, max atom move = 1.0000000 9.5409791e-17
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00019326 | 0.00019326 | 0.00019326 |   0.0 | 77.49
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.3854e-05 | 4.3854e-05 | 4.3854e-05 |   0.0 | 17.58
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.229e-05  |            |       |  4.93
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2312.00 ave        2312 max        2312 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2312
+Ave neighs/atom = 578.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.025 -0.346953280357922 156.034332862813
+
+next i
+jump SELF loop
+
+if "${i} > 1" then   "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" else   "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(13-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(13-1)*0.005)/(${vmin}+(${i}-2)*${vstep})
+variable scale equal (0.97+(13-1)*0.005)/(0.97+(${i}-2)*${vstep})
+variable scale equal (0.97+(13-1)*0.005)/(0.97+(13-2)*${vstep})
+variable scale equal (0.97+(13-1)*0.005)/(0.97+(13-2)*0.005)
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+variable ratio equal 0.97+(${i}-1)*${vstep}
+variable ratio equal 0.97+(13-1)*${vstep}
+variable ratio equal 0.97+(13-1)*0.005
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00487804878049 y scale ${scale} z scale ${scale} remap
+change_box all x scale 1.00487804878049 y scale 1.00487804878049 z scale ${scale} remap
+change_box all x scale 1.00487804878049 y scale 1.00487804878049 z scale 1.00487804878049 remap
+Changing box ...
+  orthogonal box = (-0.078784500 -0.065653750 -0.065653750) to (5.3310845 5.3179537 5.3179537)
+  orthogonal box = (-0.078784500 -0.078784500 -0.065653750) to (5.3310845 5.3310845 5.3179537)
+  orthogonal box = (-0.078784500 -0.078784500 -0.078784500) to (5.3310845 5.3310845 5.3310845)
+
+minimize 1.0e-4 1.0e-6 100 1000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Per MPI rank memory allocation (min/avg/max) = 4.246 | 4.246 | 4.246 Mbytes
+Step Temp PotEng TotEng Press Volume 
+      12            0  -0.34431463  -0.34431463   -1951.1126    158.32892 
+      13            0  -0.34431463  -0.34431463   -1951.1126    158.32892 
+Loop time of 0.00025908 on 1 procs for 1 steps with 4 atoms
+
+100.4% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = quadratic factors are zero
+  Energy initial, next-to-last, final = 
+    -0.344314631133283 -0.344314631133283 -0.344314631133283
+  Force two-norm initial, final = 2.4334640e-16 2.4334640e-16
+  Force max component initial, final = 1.1167282e-16 1.1167282e-16
+  Final line search alpha, max atom move = 1.0000000 1.1167282e-16
+  Iterations, force evaluations = 1 2
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.00020185 | 0.00020185 | 0.00020185 |   0.0 | 77.91
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 4.3986e-05 | 4.3986e-05 | 4.3986e-05 |   0.0 | 16.98
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1.324e-05  |            |       |  5.11
+
+Nlocal:        4.00000 ave           4 max           4 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:        3426.00 ave        3426 max        3426 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:        2312.00 ave        2312 max        2312 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 2312
+Ave neighs/atom = 578.00000
+Neighbor list builds = 0
+Dangerous builds = 0
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+1.03 -0.344314631133283 158.328918915218
+
+next i
+jump SELF loop
+
+# 종료
+write_data final.data
+System init for write_data ...
+Total wall time: 0:00:00
