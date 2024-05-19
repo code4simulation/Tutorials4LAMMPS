@@ -91,9 +91,6 @@ print "${{ratio}} ${{E}} ${{V}}" append eos.dat
 
 next i
 jump SELF loop
-
-# 종료
-write_data final.data
 '''
 with open('script_eos.in','w') as o:
     o.write(script)
