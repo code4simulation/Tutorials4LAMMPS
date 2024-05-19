@@ -1,0 +1,41 @@
+# LAMMPS input script for Argon with Lennard-Jones potential
+units       metal
+atom_style  atomic
+
+read_data   Ar_FCC_relaxed.lammps
+
+mass 1 39.9480
+
+# Define the Lennard-Jones potential
+pair_style      lj/cut 20
+pair_coeff      1 1 0.010325947230266126 3.405 20
+
+# Define thermodynamic output
+thermo          10
+thermo_style    custom step temp pe etotal press vol
+
+#
+variable vmin equal 0.97
+variable vmax equal 1.03
+variable vstep equal 0.005
+variable vloop equal (${vmax}-${vmin})/${vstep}+1
+
+variable i loop ${vloop}
+label loop
+
+if "${i} > 1" then &
+  "variable scale equal (${vmin}+(${i}-1)*${vstep})/(${vmin}+(${i}-2)*${vstep})" &
+else &
+  "variable scale equal ${vmin}+(${i}-1)*${vstep}"
+
+variable ratio equal ${vmin}+(${i}-1)*${vstep}
+change_box all x scale ${scale} y scale ${scale} z scale ${scale} remap
+
+minimize 1.0e-4 1.0e-6 100 1000
+
+variable E equal pe
+variable V equal vol
+print "${ratio} ${E} ${V}" append eos.dat
+
+next i
+jump SELF loop
