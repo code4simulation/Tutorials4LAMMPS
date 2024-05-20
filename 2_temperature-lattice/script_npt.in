@@ -1,0 +1,62 @@
+# LAMMPS input script for Argon with Lennard-Jones potential
+units       metal
+atom_style  atomic
+
+# Create a box and atoms
+lattice         fcc 5.25121198451
+region          box block 0 1 0 1 0 1
+create_box      1 box
+create_atoms    1 box
+
+mass 1 39.9480
+
+write_data      Ar_FCC_init.lammps
+
+# Define the Lennard-Jones potential
+pair_style      lj/cut 20
+pair_coeff      1 1 0.010325947230266126 3.405 20
+
+# Define thermodynamic output
+thermo          1000
+thermo_style    custom step temp pe etotal press vol
+
+fix 1 all box/relax iso 0.0 vmax 0.001
+min_style cg
+minimize 1.0e-4 1.0e-6 100 1000
+write_data      Ar_FCC_relaxed.lammps
+
+unfix 1
+replicate 2 2 2
+timestep 0.001
+
+#dump        traj all custom 1000 dump.lammps id type x y z
+#dump_modify traj sort id
+
+#
+variable Tmin equal 10
+variable Tmax equal 100
+variable Tstep equal 10
+variable Tloop equal (${Tmax}-${Tmin})/${Tstep}+1
+
+variable i loop ${Tloop}
+label loop
+
+variable Tanneal equal ${Tmin}+(${i}-1)*${Tstep}
+variable STEP equal step
+variable T equal temp
+variable PE equal pe
+variable Eperatom equal pe/atoms
+variable LAT equal (vol)^(1/3)/2
+
+if "${i} == 1" then &
+  "velocity all create ${Tanneal} 5534 dist gaussian"
+fix 1 all npt temp ${Tanneal} ${Tanneal} 1 iso 0 0 100.0
+fix 2 all print 1000 "${STEP} ${T} ${PE} ${Eperatom} ${LAT}" file 2_${Tanneal}.dat screen no
+
+run 250000
+
+unfix 1
+unfix 2
+
+next i
+jump SELF loop
