@@ -48,7 +48,7 @@ vacf_results = {}
 temperatures = []
 
 # Process each MSD file
-fig, ax = plt.subplots(constrained_layout=True)
+fig, ax = plt.subplots(1, 3, figsize=(15,5), constrained_layout=True)
 for msd_file in msd_files:
     temperature = extract_temperature(msd_file)
     temperatures.append(temperature)
@@ -72,9 +72,6 @@ for msd_file in msd_files:
     ax[1].set_ylabel('Velocity Auto-Correlation Function (VACF)')
     ax[1].set_title('VACF vs Simulation Step')
 
-ax[0].legend()
-ax[1].legend()
-
 # Plot diffusion coefficients comparison
 temperatures.sort()
 D_msd_values = [msd_results[temp] for temp in temperatures]
@@ -85,12 +82,13 @@ ax[2].plot(temperatures, D_vacf_values, 's-', label='VACF Method')
 ax[2].set_xlabel('Temperature (K)')
 ax[2].set_ylabel('Diffusion Coefficient (D)')
 ax[2].set_title('Diffusion Coefficient vs Temperature')
-ax[2]t.legend()
+for i in range(3):
+    ax[i].legend()
 
 # Print diffusion coefficients for each temperature
 print("Temperature (K) | Diffusion Coefficient (MSD) | Diffusion Coefficient (VACF)")
 print("----------------------------------------------------------------------------")
 for temp in temperatures:
-    print(f"{temp:15} | {msd_results[temp]:27.4E} | {vacf_results[temp]:27.4f}")
+    print(f"{temp:15} | {msd_results[temp]:27.4E} | {vacf_results[temp]:27.4E}")
 
 plt.show()
