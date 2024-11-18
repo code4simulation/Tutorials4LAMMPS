@@ -37,7 +37,7 @@ variable Tmax equal 360
 variable Tstep equal 10
 variable Tloop equal (${Tmax}-${Tmin})/${Tstep}+1
 
-velocity all create ${Tpremelt} 3186 dist gaussian
+velocity all create ${Tpremelt} 6265 dist gaussian
 
 # Premelting for 10 ps
 fix 1 all nvt temp ${Tpremelt} ${Tpremelt} 1
