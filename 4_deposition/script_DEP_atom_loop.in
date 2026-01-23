@@ -1,0 +1,89 @@
+units		   metal
+atom_style	atomic
+boundary	p p f
+box		    tilt large
+read_data	initial.lammps
+
+pair_style hybrid/overlay nn/intel zbl/pair
+
+pair_coeff  * * nn/intel ${POT} A B
+
+pair_coeff	1 1	zbl/pair 1 1	1.0  1.5
+pair_coeff	1 2	zbl/pair 1 2	1.4  1.8
+pair_coeff	2 2	zbl/pair 2 2	1.2 1.7
+
+mass	1 1
+mass	2 2
+
+neigh_modify	delay 0
+
+group		addatoms type 2
+region          mobile block INF INF INF INF 4 INF
+group		mobile region mobile
+
+compute         add  addatoms  temp
+compute_modify	add dynamic/dof yes extra/dof 0
+
+thermo		1000 
+thermo_modify	temp add lost ignore flush yes
+thermo_style	custom step atoms temp epair etotal press
+
+velocity	all create 300 260116 dist gaussian
+
+fix		1 addatoms nve
+fix		2 mobile langevin 300 300 1 260116
+fix		3 mobile nve
+
+timestep	0.0010
+run             100000 #  100-ps equilibration
+
+
+fix		fWALL addatoms wall/reflect zhi EDGE
+
+region          rDEP block EDGE EDGE EDGE EDGE 30 40
+
+#### Set Energy of atom/molecule => V_initial = sqrt(2*E/m)
+variable V_initial equal    150
+  
+#### Set incident angle of atom/molecule
+variable angle_target equal 0
+  
+#### Seed for angle, position
+variable seeds equal 260116
+
+#Nomral distribution for incident angle with 1 standard deviation.
+variable angle_incidence equal $(abs(normal(v_angle_target,1,v_seeds)/180*PI))
+  
+#Random azimuth angoles
+variable angle_phi equal $(random(0,360,v_seeds)/180*PI)
+  
+#Calculate vector of velocity with selected angles.
+variable vel_Z equal $(-v_V_initial*cos(v_angle_incidence))
+variable vel_X equal $(-v_V_initial*sin(v_angle_incidence)*cos(v_angle_phi))
+variable vel_Y equal $(-v_V_initial*sin(v_angle_incidence)*sin(v_angle_phi))
+  
+#Seed of HF molecule position 
+variable pos_seed equal $(round(random(1,10000,v_seeds)))
+  
+#fix ID group-ID deposit N type M seed keyword values
+#  N = # of atoms or molecules to insert
+#  type = atom type (1-Ntypes or type label) to assign to inserted atoms (offset for molecule insertion)
+#  M = insert a single atom or molecule every M steps
+fix		fDEP addatoms deposit 10 2 10000 $(v_seeds) region rDEP near 1.0 &
+                     vx $(v_vel_X) $(v_vel_X) vy $(v_vel_Y) $(v_vel_Y) vz $(v_vel_Z)  $(v_vel_Z) attempt 20
+  
+
+# Varibale timestep
+fix dt_fix all dt/reset 1   NULL 0.0005  0.1 emax 1 units box
+ 
+variable n loop 10
+label loop_start
+  dump            DUMP all custom 10 dump_${n}.lammpstrj id type x y z
+  dump_modify     DUMP sort id
+
+  variable        iters equal 10000
+  run             ${iters}
+
+  undump          DUMP
+next n
+jump SELF loop_start
