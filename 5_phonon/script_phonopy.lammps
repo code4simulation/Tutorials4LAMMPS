@@ -1,0 +1,4 @@
+dump         phonopy all custom 1 force.dump id type x y z fx fy fz
+dump_modify  phonopy sort id format line "%d %d %15.8f %15.8f %15.8f %15.8f %15.8f %15.8f"
+
+run 0
