@@ -14,7 +14,7 @@ def main():
     if len(sys.argv) > 1:
         input_file = sys.argv[1]
     else:
-        input_file = "./phonon/qpoints.yaml"
+        input_file = "./phonopy/qpoints.yaml"
 
     # hard coding... example...
     elem = 'W'.split()
