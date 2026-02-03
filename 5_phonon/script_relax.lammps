@@ -1,0 +1,9 @@
+thermo          ${output}
+thermo_modify   lost ignore flush yes
+thermo_style    custom step temp pe ke vol press
+
+minimize        1e-6 1e-10 10000 100000
+
+fix             1 all box/relax iso 0 vmax 0.001 fixedpoint 0 0 0
+minimize        1e-6 1e-10 10000 100000
+write_data      relaxed.lammps
