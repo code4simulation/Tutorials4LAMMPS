@@ -1,0 +1,7 @@
+variable         output    equal  1000
+variable         dumpstep  equal  1000
+
+units            metal
+boundary         p p p
+box tilt large
+read_data        ${input_structure}
