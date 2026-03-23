@@ -1,0 +1,32 @@
+units metal
+boundary p p p
+atom_style atomic
+
+lattice diamond 5.43
+region box block 0 4 0 4 0 4
+create_box 1 box
+create_atoms 1 box
+mass 1 28.0855
+
+pair_style sw
+pair_coeff * * Si.sw Si
+
+# Melt at 4000K, extremely fast
+velocity all create 4000.0 12345 rot yes mom yes
+fix 1 all npt temp 4000.0 4000.0 0.5 iso 0.0 0.0 5.0
+run 10000
+unfix 1
+
+# Cool down to T0
+fix 2 all npt temp 1900.0 1900.0 0.5 iso 0.0 0.0 5.0
+thermo 1000
+run 10000
+unfix 2
+
+# NVT to sample Density
+fix 3 all nvt temp 1900.0 1900.0 0.5
+variable d equal density
+fix def all ave/time 1 2500 10000 v_d file density.dat
+run 10000
+
+write_data conf_liquid.data nocoeff
